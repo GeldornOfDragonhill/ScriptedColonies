@@ -1,0 +1,35 @@
+modLoader="javafml"
+loaderVersion="[31,)"
+
+issueTrackerURL="https://github.com/GeldornOfDragonhill/ScriptedColonies/issues"
+
+[[mods]]
+modId="scriptedcolonies"
+version="${file.jarVersion}"
+displayName="Scripted Colonies"
+displayURL="https://github.com/GeldornOfDragonhill/ScriptedColonies"
+authors="GeldornOfDragonhill"
+description='''
+A mod to script minecolonies.
+'''
+
+[[dependencies.scriptedcolonies]]
+    modId="forge"
+    mandatory=true
+    versionRange="[31,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.scriptedcolonies]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.15.2]"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.scriptedcolonies]]
+    modId="minecolonies"
+    mandatory=true
+    versionRange="[0.11.944-ALPHA,)"
+    ordering="AFTER"
+    side="BOTH"
