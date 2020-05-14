@@ -1,9 +1,9 @@
 package com.ldtteam.scriptedcolonies.runner;
 
+import com.ldtteam.scriptedcolonies.helpers.MinecraftScheduler;
 import com.minecolonies.api.util.constant.Constants;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.LogicalSidedProvider;
@@ -15,9 +15,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
@@ -45,21 +42,11 @@ public final class ScriptManager {
 
 		public void message(String message, Level logLevel) {
 			if(playerId != null) {
-				ThreadTaskExecutor<?> executor = LogicalSidedProvider.WORKQUEUE.get(LogicalSide.SERVER);
-				CompletableFuture<Void> future = executor.deferTask(() -> {
+				MinecraftScheduler.schedule(() -> {
 					MinecraftServer server = LogicalSidedProvider.INSTANCE.get(LogicalSide.SERVER);
 					ServerPlayerEntity player = server.getPlayerList().getPlayerByUUID(playerId);
 					player.sendMessage(new StringTextComponent(message));
 				});
-
-				try {
-					future.get(5, TimeUnit.SECONDS);
-				} catch (TimeoutException e) {
-					throw new ScriptRunnerException("Waiting for minecraft timed out");
-				} catch (Exception exception) {
-					throw new ScriptRunnerException("There has been a problem while waiting for minecraft");
-				}
-
 			} else {
 				logLevel = Level.INFO;
 			}
@@ -91,16 +78,16 @@ public final class ScriptManager {
 				scriptInstance = null;
 			}
 
-			scriptInstance = new ScriptInstance(userId, messageAction -> runThread(stream, messageAction));
+			scriptInstance = new ScriptInstance(userId, messageAction -> runThread(stream, messageAction, userId));
 		}
 		finally {
 			lock.unlock();
 		}
 	}
 
-	private static void runThread(InputStream stream, BiConsumer<String, Level> messageAction) {
+	private static void runThread(InputStream stream, BiConsumer<String, Level> messageAction, UUID userId) {
 		try {
-			ScriptRunner runner = new ScriptRunner(messageAction);
+			ScriptRunner runner = new ScriptRunner(messageAction, userId);
 			runner.run(stream);
 		}
 		catch(Exception exception) {

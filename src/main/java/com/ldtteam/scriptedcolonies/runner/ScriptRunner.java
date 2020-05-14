@@ -1,20 +1,24 @@
 package com.ldtteam.scriptedcolonies.runner;
 
+import com.ldtteam.scriptedcolonies.luamethods.McCreateColonyMethod;
+import com.ldtteam.scriptedcolonies.luamethods.McFillFromBottomCenterMethod;
+import com.ldtteam.scriptedcolonies.luamethods.McPrintMethod;
 import org.apache.logging.log4j.Level;
 import org.squiddev.cobalt.*;
 import org.squiddev.cobalt.compiler.CompileException;
 import org.squiddev.cobalt.compiler.LoadState;
 import org.squiddev.cobalt.function.LuaFunction;
-import org.squiddev.cobalt.function.VarArgFunction;
 import org.squiddev.cobalt.lib.BaseLib;
 import org.squiddev.cobalt.lib.platform.VoidResourceManipulator;
 
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class ScriptRunner {
 	private BiConsumer<String, Level> messageAction;
+	private UUID userId;
 	private LuaState state;
 	private LuaTable globals;
 
@@ -24,8 +28,17 @@ public class ScriptRunner {
 		allowedGlobals.add("pairs");
 	}
 
-	public ScriptRunner(BiConsumer<String, Level> messageAction) {
+	public BiConsumer<String, Level> getMessageAction() {
+		return this.messageAction;
+	}
+
+	public UUID getUserId() {
+		return this.userId;
+	}
+
+	public ScriptRunner(BiConsumer<String, Level> messageAction, UUID userId) {
 		this.messageAction = messageAction;
+		this.userId = userId;
 
 		this.state = LuaState.builder()
 			.resourceManipulator(new VoidResourceManipulator())
@@ -62,35 +75,9 @@ public class ScriptRunner {
 		}
 
 		//Add custom methods
-		globals.rawset("mcprint", new McPrintMethod(this));
-	}
-
-	private class McPrintMethod extends VarArgFunction {
-
-		private final ScriptRunner runner;
-
-		McPrintMethod(ScriptRunner runner) {
-			this.runner = runner;
-		}
-
-		@Override
-		public Varargs invoke(LuaState luaState, Varargs varargs) throws LuaError, UnwindThrowable {
-			if(varargs.count() != 1) {
-				return Constants.NONE;
-			}
-
-			LuaValue arg0 = varargs.arg(1);
-
-			if(!(arg0 instanceof LuaString)) {
-				return Constants.NONE;
-			}
-
-			String arg = ((LuaString)arg0).toString();
-
-			this.runner.messageAction.accept(arg, Level.OFF);
-
-			return Constants.NONE;
-		}
+		globals.rawset("mc_print", new McPrintMethod(this));
+		globals.rawset("mc_fill_from_bottom_center", new McFillFromBottomCenterMethod(this));
+		globals.rawset("mc_create_colony", new McCreateColonyMethod(this));
 	}
 
 	public void run(InputStream program) {
@@ -104,6 +91,8 @@ public class ScriptRunner {
 					this.messageAction.accept("Script error return code: " + intRetval, Level.INFO);
 				}
 			}
+
+			this.messageAction.accept("Script done", Level.INFO);
 
 		} catch (UnwindThrowable throwable) {
 			this.messageAction.accept("Script unwind error: " + throwable.getMessage(), Level.INFO);
