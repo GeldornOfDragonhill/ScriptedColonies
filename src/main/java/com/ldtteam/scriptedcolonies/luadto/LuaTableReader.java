@@ -24,6 +24,10 @@ public class LuaTableReader {
 		return table.rawget(key).checkString();
 	}
 
+	public boolean readBool(String key) throws LuaError {
+		return table.rawget(key).checkBoolean();
+	}
+
 	public <T extends  LuaDtoBase> T readTable(String key, Class<T> type) throws LuaError {
 		return readTable(table.rawget(key).checkTable(), type);
 	}

@@ -2,6 +2,7 @@ package com.ldtteam.scriptedcolonies.runner;
 
 import com.ldtteam.scriptedcolonies.luamethods.McCreateColonyMethod;
 import com.ldtteam.scriptedcolonies.luamethods.McFillFromBottomCenterMethod;
+import com.ldtteam.scriptedcolonies.luamethods.McPlaceStructure;
 import com.ldtteam.scriptedcolonies.luamethods.McPrintMethod;
 import org.apache.logging.log4j.Level;
 import org.squiddev.cobalt.*;
@@ -78,6 +79,7 @@ public class ScriptRunner {
 		globals.rawset("mc_print", new McPrintMethod(this));
 		globals.rawset("mc_fill_from_bottom_center", new McFillFromBottomCenterMethod(this));
 		globals.rawset("mc_create_colony", new McCreateColonyMethod(this));
+		globals.rawset("mc_place_structure", new McPlaceStructure(this));
 	}
 
 	public void run(InputStream program) {
